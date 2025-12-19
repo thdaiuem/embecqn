@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>cqn giáng sinh an lành</title>
+    <title>Magic Christmas</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -79,7 +79,7 @@
     <div id="copyright">© by zest</div>
 
     <div id="canvas-container"></div>
-    <video class="input_video" style="display:none"></video>
+    <video class="input_video" autoplay playsinline muted style="position:absolute; left:-9999px; width:1px; height:1px; opacity:0;"></video>
     <canvas id="camera-preview"></canvas>
 
     <script>
@@ -479,7 +479,6 @@
 
         function startSystem() {
             document.getElementById('btnStart').style.display = 'none';
-            bgMusic.play().catch(e => console.log(e));
             init3D();
 
             const video = document.getElementsByClassName('input_video')[0];
@@ -523,9 +522,22 @@
             });
 
             const cameraUtils = new Camera(video, {
-                onFrame: async () => { await hands.send({image: video}); }, width: 320, height: 240
+                onFrame: async () => { await hands.send({image: video}); }, width: 320, height: 240, facingMode: 'environment'
             });
-            cameraUtils.start();
+
+            cameraUtils.start().then(() => {
+                // Camera started - start audio (user gesture already happened) and clear errors
+                bgMusic.play().catch(e => console.log(e));
+                const errEl = document.getElementById('error-log');
+                if (errEl) { errEl.style.display = 'none'; errEl.innerText = ''; }
+            }).catch(err => {
+                console.error('Camera start failed:', err);
+                const errEl = document.getElementById('error-log');
+                if (errEl) {
+                    errEl.style.display = 'block';
+                    errEl.innerText = 'Không thể truy cập camera: ' + (err && err.message ? err.message : err);
+                }
+            });
         }
 
         window.addEventListener('resize', () => {
