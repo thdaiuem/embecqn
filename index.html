@@ -42,9 +42,10 @@
         /* Camera Preview  */
         #camera-preview {
             position: absolute; top: 15px; right: 15px;
-            width: 120px; height: 90px;
-            border: 2px solid rgba(255,0,0,0.5); 
-            transform: scaleX(-1); opacity: 0.6; border-radius: 8px;
+            width: 160px; aspect-ratio: 4/3; height: auto;
+            border: 2px solid rgba(255,0,0,0.5);
+            transform: scaleX(-1); opacity: 0.95; border-radius: 8px;
+            background: #000;
         }
         
         /*  */
@@ -294,7 +295,7 @@
             ctx.font = 'bold italic 90px "Times New Roman"';
             ctx.fillStyle = '#FFD700'; ctx.textAlign = 'center';
             ctx.shadowColor = "#FF0000"; ctx.shadowBlur = 40; 
-            ctx.fillText("Dành cho Chu Quỳnh Nga", 512, 130);
+            ctx.fillText("Marry Christmas cqn", 512, 130);
             const tex = new THREE.CanvasTexture(canvas);
             const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
             titleMesh = new THREE.Mesh(new THREE.PlaneGeometry(60, 15), mat);
@@ -484,12 +485,25 @@
             const video = document.getElementsByClassName('input_video')[0];
             const canvas = document.getElementById('camera-preview');
             const ctx = canvas.getContext('2d');
+
+            // Preview size in CSS pixels (matches camera aspect 4:3 by default)
+            const previewWidth = 160;
+            const previewHeight = 120;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = previewWidth * dpr;
+            canvas.height = previewHeight * dpr;
+            canvas.style.width = previewWidth + 'px';
+            canvas.style.height = previewHeight + 'px';
+            // Make drawing commands use CSS pixel coordinates
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             
             const hands = new Hands({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`});
             hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
 
             hands.onResults(results => {
-                ctx.clearRect(0,0,100,75); ctx.drawImage(results.image, 0, 0, 100, 75);
+                // draw full camera preview into the canvas without shrinking
+                ctx.clearRect(0, 0, previewWidth, previewHeight);
+                ctx.drawImage(results.image, 0, 0, previewWidth, previewHeight);
 
                 // --- Hand Logic  ---
                 if (results.multiHandLandmarks.length === 2) {
